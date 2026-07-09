@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<title>Летнее чтение: Peter Rabbit & The Gruffalo</title>
+<style>
+  :root{
+    --radius:14px;
+  }
+  body.theme-peter{
+    --bg:#f5f0e1;
+    --panel:#fffdf6;
+    --panel2:#eee7d3;
+    --ink:#3a3226;
+    --muted:#7d7360;
+    --accent:#4a7c46;
+    --accent2:#4a6d9c;
+    --warn:#c25b4e;
+    --gold:#b98a2f;
+    --border:#d9cfb6;
+    --shadow:0 2px 8px rgba(90,75,40,.12);
+  }
+  body.theme-gruffalo{
+    --bg:#f7f1e4;
+    --panel:#fffcf4;
+    --panel2:#f1e7d2;
+    --ink:#40331f;
+    --muted:#8a7a5c;
+    --accent:#d97a1e;
+    --accent2:#6e8f3f;
+    --warn:#c85a45;
+    --gold:#b98a2f;
+    --border:#e0d3b4;
+    --shadow:0 2px 8px rgba(120,90,40,.14);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);
+    min-height:100vh;transition:background .4s,color .4s;
+    padding-bottom:60px;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:0 14px}
+  .wrap.wide{max-width:1180px}
+  .layout{display:grid;grid-template-columns:1fr;gap:16px;align-items:start}
+  .video-col{position:sticky;top:8px;z-index:20}
+  .work-col{min-width:0}
+  @media (min-width:920px){
+    .layout{grid-template-columns:minmax(380px,46%) 1fr}
+    .video-col{top:16px}
+  }
+
+  /* ---- шапка / выбор книги ---- */
+  header{padding:22px 0 6px;text-align:center}
+  header h1{
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:clamp(22px,5vw,32px);font-weight:700;letter-spacing:.3px;
+  }
+  header .sub{color:var(--muted);font-size:14px;margin-top:4px}
+  .book-tabs{
+    display:flex;gap:10px;margin:18px 0 14px;
+  }
+  .book-tab{
+    flex:1;border:2px solid var(--border);border-radius:var(--radius);
+    background:var(--panel);color:var(--ink);cursor:pointer;
+    padding:12px 8px;text-align:center;transition:all .2s;
+    font-family:Georgia,serif;
+  }
+  .book-tab .emoji{font-size:26px;display:block;margin-bottom:4px}
+  .book-tab .t{font-size:15px;font-weight:700}
+  .book-tab .s{font-size:11px;color:var(--muted)}
+  .book-tab.active{border-color:var(--accent);box-shadow:var(--shadow);transform:translateY(-2px)}
+  .book-tab.active .t{color:var(--accent)}
+
+  /* ---- режимы ---- */
+  .mode-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
+  .mode-tabs::-webkit-scrollbar{display:none}
+  .mode-tab{
+    flex:0 0 auto;border:1.5px solid var(--border);border-radius:999px;
+    background:var(--panel);color:var(--ink);cursor:pointer;
+    padding:8px 14px;font-size:13.5px;white-space:nowrap;transition:all .15s;
+  }
+  .mode-tab.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+
+  .panel{
+    background:var(--panel);border:1.5px solid var(--border);
+    border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:18px;margin-top:14px;
+  }
+  .hint{color:var(--muted);font-size:13.5px;margin-bottom:12px;line-height:1.45}
+
+  /* ---- словарь ---- */
+  .search{
+    width:100%;padding:11px 14px;font-size:16px;border-radius:10px;
+    border:1.5px solid var(--border);background:var(--panel2);color:var(--ink);
+    margin-bottom:12px;outline:none;
+  }
+  .search:focus{border-color:var(--accent)}
+  .dict-row{
+    display:flex;align-items:center;gap:10px;
+    padding:9px 6px;border-bottom:1px solid var(--border);
+  }
+  .dict-row:last-child{border-bottom:none}
+  .dict-en{font-weight:700;font-size:15.5px;flex:0 0 44%}
+  .dict-ru{color:var(--muted);font-size:14.5px;flex:1}
+  .spk{
+    border:none;background:none;cursor:pointer;font-size:17px;
+    padding:4px;opacity:.75;flex:0 0 auto;
+  }
+  .spk:active{transform:scale(1.2)}
+  .dict-empty{text-align:center;color:var(--muted);padding:24px 0}
+
+  /* ---- карточки ---- */
+  .card-stage{perspective:900px;margin:6px auto 14px;max-width:420px;height:210px}
+  .card{
+    position:relative;width:100%;height:100%;cursor:pointer;
+    transform-style:preserve-3d;transition:transform .45s;
+  }
+  .card.flipped{transform:rotateY(180deg)}
+  .card-face{
+    position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    border:2px solid var(--border);border-radius:16px;background:var(--panel2);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:8px;padding:16px;text-align:center;box-shadow:var(--shadow);
+  }
+  .card-face.back{transform:rotateY(180deg);border-color:var(--accent)}
+  .card-word{font-family:Georgia,serif;font-size:30px;font-weight:700}
+  .card-tr{font-size:22px}
+  .card-tip{font-size:12px;color:var(--muted)}
+  .card-btns{display:flex;gap:10px;justify-content:center}
+  .progress-line{color:var(--muted);font-size:13px;text-align:center;margin-bottom:10px}
+
+  /* ---- кнопки ---- */
+  .btn{
+    border:none;border-radius:11px;cursor:pointer;font-size:15px;font-weight:600;
+    padding:11px 20px;transition:transform .1s,opacity .15s;color:#fff;
+  }
+  .btn:active{transform:scale(.96)}
+  .btn.green{background:var(--accent)}
+  .btn.blue{background:var(--accent2)}
+  .btn.red{background:var(--warn)}
+  .btn.ghost{background:var(--panel2);color:var(--ink);border:1.5px solid var(--border)}
+  .btn.wide{width:100%;margin-top:8px}
+  .btn:disabled{opacity:.45;cursor:default}
+
+  /* ---- викторина / вопросы / пропуски ---- */
+  .q-word{
+    font-family:Georgia,serif;font-size:26px;font-weight:700;text-align:center;
+    margin:8px 0 4px;
+  }
+  .q-text{font-size:17px;line-height:1.5;text-align:center;margin:8px 0 14px}
+  .q-text b{color:var(--accent)}
+  .gap{
+    display:inline-block;min-width:74px;border-bottom:2px dashed var(--accent);
+    text-align:center;font-weight:700;color:var(--accent);
+  }
+  .opts{display:grid;gap:9px;margin-top:12px}
+  .opt{
+    border:1.5px solid var(--border);border-radius:11px;background:var(--panel2);
+    color:var(--ink);cursor:pointer;padding:12px 14px;font-size:15.5px;
+    text-align:left;transition:all .15s;
+  }
+  .opt:not(:disabled):hover{border-color:var(--accent)}
+  .opt.correct{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+  .opt.wrong{background:var(--warn);border-color:var(--warn);color:#fff}
+  .opt:disabled{cursor:default}
+  .feedback{min-height:24px;text-align:center;font-weight:700;margin-top:12px;font-size:15px}
+  .feedback.ok{color:var(--accent)}
+  .feedback.no{color:var(--warn)}
+  .score-bar{
+    display:flex;justify-content:space-between;align-items:center;
+    color:var(--muted);font-size:13.5px;margin-bottom:10px;
+  }
+  .result-box{text-align:center;padding:20px 0}
+  .result-box .big{font-family:Georgia,serif;font-size:40px;font-weight:700;color:var(--accent)}
+  .result-box p{margin:10px 0 16px;color:var(--muted)}
+
+  /* ---- пары ---- */
+  .pairs-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .pair-btn{
+    border:1.5px solid var(--border);border-radius:11px;background:var(--panel2);
+    color:var(--ink);cursor:pointer;padding:13px 8px;font-size:14.5px;
+    text-align:center;transition:all .15s;min-height:52px;
+  }
+  .pair-btn.sel{border-color:var(--accent2);background:var(--accent2);color:#fff}
+  .pair-btn.done{opacity:.28;pointer-events:none;border-style:dashed}
+  .pair-btn.shake{animation:shake .35s}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+  /* ---- главный экран ---- */
+  .home{padding:40px 0 20px;text-align:center}
+  .home h1{font-family:Georgia,serif;font-size:clamp(26px,6vw,38px);margin-bottom:6px}
+  .home .sub{color:var(--muted);font-size:15px;margin-bottom:34px}
+  .home-btns{display:flex;flex-direction:column;gap:18px;max-width:440px;margin:0 auto}
+  .home-btn{
+    border:2.5px solid var(--border);border-radius:20px;cursor:pointer;
+    padding:28px 20px;text-align:center;transition:all .2s;box-shadow:var(--shadow);
+    font-family:Georgia,serif;
+  }
+  .home-btn:hover{transform:translateY(-3px)}
+  .home-btn .emoji{font-size:52px;display:block;margin-bottom:10px}
+  .home-btn .t{font-size:22px;font-weight:700;display:block;margin-bottom:5px}
+  .home-btn .s{font-size:13.5px}
+  .home-btn.peter{background:#fffdf6;color:#3a3226;border-color:#4a7c46}
+  .home-btn.peter .t{color:#4a7c46}
+  .home-btn.peter .s{color:#7d7360}
+  .home-btn.gruffalo{background:#fffcf4;color:#40331f;border-color:#d97a1e}
+  .home-btn.gruffalo .t{color:#d97a1e}
+  .home-btn.gruffalo .s{color:#8a7a5c}
+  .back-btn{
+    border:1.5px solid var(--border);border-radius:999px;background:var(--panel);
+    color:var(--muted);cursor:pointer;padding:7px 16px;font-size:13.5px;
+    margin:14px 0 0;display:inline-flex;align-items:center;gap:6px;
+  }
+  .back-btn:hover{border-color:var(--accent);color:var(--ink)}
+  /* ---- видео ---- */
+  .video-box{position:relative;width:100%;padding-top:56.25%;border-radius:12px;overflow:hidden;border:2px solid var(--border);box-shadow:var(--shadow)}
+  .video-box iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  footer{
+    text-align:center;color:var(--muted);font-size:12px;margin-top:26px;
+    font-family:Georgia,serif;font-style:italic;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;animation:none !important}
+  }
+</style>
+</head>
+<body class="theme-peter">
+<div class="wrap wide">
+
+  <!-- Экран выбора книги -->
+  <div class="home" id="homeScreen">
+    <h1>📚 Летнее чтение</h1>
+    <div class="sub">Выбери книгу, которую читаешь</div>
+    <div class="home-btns">
+      <button class="home-btn peter" onclick="openBook('peter')">
+        <span class="emoji">🐰</span>
+        <span class="t">The Tale of Peter Rabbit</span>
+        <span class="s">Беатрис Поттер · сад мистера Макгрегора</span>
+      </button>
+      <button class="home-btn gruffalo" onclick="openBook('gruffalo')">
+        <span class="emoji">🐭</span>
+        <span class="t">The Gruffalo</span>
+        <span class="s">Джулия Дональдсон · дремучий тёмный лес</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Тренажёр -->
+  <div id="trainerScreen" style="display:none">
+    <div style="text-align:center">
+      <button class="back-btn" onclick="goHome()">← К выбору книги</button>
+    </div>
+    <header>
+      <h1 id="bookTitle">The Tale of Peter Rabbit</h1>
+      <div class="sub" id="bookSub">Беатрис Поттер · тренажёр по книге</div>
+    </header>
+    <div class="layout">
+      <div class="video-col">
+        <div class="video-box">
+          <iframe id="bookVideo" src="" title="Мультик по книге"
+            referrerpolicy="strict-origin-when-cross-origin"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen></iframe>
+        </div>
+      </div>
+      <div class="work-col">
+        <div class="mode-tabs" id="modeTabs"></div>
+        <div class="panel" id="stage"></div>
+      </div>
+    </div>
+    <footer id="footerLine">…and don't go into Mr. McGregor's garden!</footer>
+  </div>
+</div>
+<script>
+/* ================= ДАННЫЕ ================= */
+const BOOKS = {
+peter: {
+  title:"The Tale of Peter Rabbit",
+  sub:"Беатрис Поттер · тренажёр по книге",
+  footer:"…and don't go into Mr. McGregor's garden!",
+  theme:"theme-peter",
+  video:"EuTlQCGxE5Y",
+  words:[
+    ["rabbit","кролик"],["naughty","непослушный"],["mischief","проказы, шалости"],
+    ["sand-bank","песчаный холм"],["fir-tree","ель"],["field","поле"],
+    ["lane","тропинка, просёлок"],["garden","сад, огород"],["gate","калитка"],
+    ["accident","несчастный случай"],["pie","пирог"],["basket","корзина"],
+    ["umbrella","зонт"],["loaf of bread","буханка хлеба"],["bun","булочка"],
+    ["gather","собирать"],["blackberries","ежевика"],["squeeze","протискиваться"],
+    ["lettuce","салат (латук)"],["beans","фасоль"],["radish","редис"],
+    ["parsley","петрушка"],["cucumber","огурец"],["cabbage","капуста"],
+    ["feel sick","чувствовать тошноту"],["rake","грабли"],["thief","вор"],
+    ["frightened","испуганный"],["shoe","ботинок"],["potatoes","картофель"],
+    ["net","сеть"],["button","пуговица"],["jacket","куртка"],
+    ["tears","слёзы"],["sparrow","воробей"],["sieve","сито"],
+    ["wriggle out","выскользнуть"],["tool-shed","сарай с инструментами"],
+    ["watering can","лейка"],["flower-pot","цветочный горшок"],
+    ["sneeze","чихать"],["tremble","дрожать"],["damp","сырой, мокрый"],
+    ["wander","бродить"],["locked","заперт(а)"],["peas","горох"],
+    ["pond","пруд"],["goldfish","золотая рыбка"],["tail","хвост"],
+    ["hoe","мотыга"],["bush","куст"],["wheelbarrow","садовая тачка"],
+    ["onion","лук"],["scarecrow","пугало"],["blackbird","чёрный дрозд"],
+    ["fortnight","две недели"],["camomile tea","ромашковый чай"],["supper","ужин"]
+  ],
+  gaps:[
+    {s:"Once upon a time there were four little ___.",a:"rabbits",o:["rabbits","foxes","cats"]},
+    {s:"Don't go into Mr. McGregor's ___!",a:"garden",o:["garden","house","shop"]},
+    {s:"Your Father had an accident there; he was put in a ___.",a:"pie",o:["pie","box","car"]},
+    {s:"Mrs. Rabbit took a basket and her ___.",a:"umbrella",o:["umbrella","phone","hat"]},
+    {s:"Good little bunnies went down the lane to gather ___.",a:"blackberries",o:["blackberries","apples","flowers"]},
+    {s:"Peter squeezed under the ___.",a:"gate",o:["gate","table","bed"]},
+    {s:"First he ate some lettuces and some French ___.",a:"beans",o:["beans","cakes","sweets"]},
+    {s:"Mr. McGregor ran after Peter, waving a ___.",a:"rake",o:["rake","stick","book"]},
+    {s:"Peter lost one of his ___ among the cabbages.",a:"shoes",o:["shoes","toys","hats"]},
+    {s:"He jumped into a ___ with water.",a:"can",o:["can","bag","cup"]},
+    {s:"Peter ___ — 'Kertyschoo!' — and Mr. McGregor found him.",a:"sneezed",o:["sneezed","sang","laughed"]},
+    {s:"A white cat was staring at some ___.",a:"gold-fish",o:["gold-fish","birds","mice"]},
+    {s:"Mr. McGregor hung up the little jacket for a ___.",a:"scare-crow",o:["scare-crow","present","sale"]},
+    {s:"His mother made some camomile ___.",a:"tea",o:["tea","soup","juice"]},
+    {s:"Flopsy, Mopsy, and Cotton-tail had bread and milk and blackberries for ___.",a:"supper",o:["supper","breakfast","school"]}
+  ],
+  quizQs:[
+    {q:"How many little rabbits were there?",a:"Four",o:["Four","Two","Six"]},
+    {q:"What are the names of Peter's sisters?",a:"Flopsy, Mopsy and Cotton-tail",o:["Flopsy, Mopsy and Cotton-tail","Molly, Polly and Dolly","Fluffy, Puffy and Tuffy"]},
+    {q:"What happened to Peter's father?",a:"Mrs. McGregor put him in a pie",o:["Mrs. McGregor put him in a pie","He ran away to the forest","He went to live in the city"]},
+    {q:"Where did Peter go?",a:"Into Mr. McGregor's garden",o:["Into Mr. McGregor's garden","To the baker's","Down the lane for blackberries"]},
+    {q:"What did Peter eat in the garden?",a:"Lettuces, beans and radishes",o:["Lettuces, beans and radishes","Bread and buns","Blackberries and milk"]},
+    {q:"Who chased Peter with a rake?",a:"Mr. McGregor",o:["Mr. McGregor","Mrs. Rabbit","A big cat"]},
+    {q:"Where did Peter hide in the tool-shed?",a:"In a watering can",o:["In a watering can","Under the bed","Behind the door"]},
+    {q:"How did Mr. McGregor find Peter in the shed?",a:"Peter sneezed",o:["Peter sneezed","Peter laughed","Peter fell down"]},
+    {q:"What did Peter lose in the garden?",a:"His jacket and his shoes",o:["His jacket and his shoes","His basket and umbrella","His bread and buns"]},
+    {q:"What did Mr. McGregor make with Peter's jacket?",a:"A scarecrow",o:["A scarecrow","A pillow","A flag"]},
+    {q:"What did Peter's mother give him in the evening?",a:"Camomile tea",o:["Camomile tea","Bread and milk","A big supper"]},
+    {q:"What did Flopsy, Mopsy and Cotton-tail have for supper?",a:"Bread, milk and blackberries",o:["Bread, milk and blackberries","Camomile tea","Lettuce and radishes"]}
+  ]
+},
+gruffalo: {
+  title:"The Gruffalo",
+  sub:"Джулия Дональдсон · тренажёр по книге",
+  footer:"A mouse took a stroll through the deep dark wood…",
+  theme:"theme-gruffalo",
+  video:"QhhUE1qe3GA",
+  words:[
+    ["mouse","мышь, мышонок"],["wood","лес"],["deep","глубокий, дремучий"],
+    ["dark","тёмный"],["stroll","прогулка; прогуливаться"],["fox","лиса"],
+    ["owl","сова"],["snake","змея"],["creature","существо"],
+    ["terrible","ужасный"],["tusks","клыки, бивни"],["claws","когти"],
+    ["jaws","челюсти, пасть"],["teeth","зубы"],["knees","колени"],
+    ["knobbly","шишковатый, бугристый"],["toes","пальцы ног"],
+    ["turned-out","вывернутый наружу"],["wart","бородавка"],
+    ["poisonous","ядовитый"],["nose","нос"],["eyes","глаза"],
+    ["tongue","язык"],["prickles","колючки, иголки"],["back","спина"],
+    ["purple","фиолетовый"],["orange","оранжевый"],["black","чёрный"],
+    ["meet","встречать(ся)"],["lunch","обед"],["feast","пир, угощение"],
+    ["favourite food","любимая еда"],["roasted","жареный"],
+    ["scrambled","взбитый (scrambled eggs — яичница-болтунья)"],
+    ["ice cream","мороженое"],["underground","подземный"],
+    ["treetop","верхушка дерева"],["logpile","куча брёвен"],
+    ["house","дом"],["scared","напуганный"],["afraid","испуганный, боящийся"],
+    ["run away","убегать"],["walk behind","идти позади"],
+    ["tummy","животик"],["rumble","урчать"],["crumble","крамбл (десерт); крошка"],
+    ["nut","орех"],["quiet","тихий"],["good","хороший, вкусный"],
+    ["astounding","поразительный"],["amazing","удивительный"],
+    ["silly","глупый"],["there's no such thing","такого не существует"]
+  ],
+  gaps:[
+    {s:"A mouse took a stroll through the deep dark ___.",a:"wood",o:["wood","city","river"]},
+    {s:"A ___ saw the mouse, and the mouse looked good.",a:"fox",o:["fox","dog","cow"]},
+    {s:"The fox lives in an ___ house.",a:"underground",o:["underground","treetop","logpile"]},
+    {s:"The owl lives in a ___ house.",a:"treetop",o:["treetop","underground","logpile"]},
+    {s:"The snake lives in a ___ house.",a:"logpile",o:["logpile","treetop","underground"]},
+    {s:"The gruffalo has terrible tusks, terrible ___ and terrible teeth.",a:"claws",o:["claws","shoes","ears"]},
+    {s:"He has knobbly ___ and turned-out toes.",a:"knees",o:["knees","hands","wings"]},
+    {s:"He has a poisonous wart at the end of his ___.",a:"nose",o:["nose","tail","foot"]},
+    {s:"His eyes are ___ and his tongue is black.",a:"orange",o:["orange","blue","green"]},
+    {s:"He has purple ___ all over his back.",a:"prickles",o:["prickles","flowers","buttons"]},
+    {s:"The gruffalo's favourite food is roasted ___.",a:"fox",o:["fox","cake","fish"]},
+    {s:"The gruffalo likes ___ ice cream.",a:"owl",o:["owl","banana","mouse"]},
+    {s:"The gruffalo likes scrambled ___.",a:"snake",o:["snake","eggs","milk"]},
+    {s:"The mouse said: my favourite food is gruffalo ___!",a:"crumble",o:["crumble","soup","pizza"]},
+    {s:"At the end the mouse found a ___, and the nut was good.",a:"nut",o:["nut","cake","apple"]}
+  ],
+  quizQs:[
+    {q:"Who is the main character of the book?",a:"A little mouse",o:["A little mouse","A big fox","An old owl"]},
+    {q:"Where does the story happen?",a:"In the deep dark wood",o:["In the deep dark wood","In a big city","On a farm"]},
+    {q:"Which three animals want to eat the mouse?",a:"A fox, an owl and a snake",o:["A fox, an owl and a snake","A cat, a dog and a wolf","A bear, a fox and a bird"]},
+    {q:"Why do the fox, the owl and the snake run away?",a:"The mouse tells them about the gruffalo",o:["The mouse tells them about the gruffalo","They are late for lunch","They see a hunter"]},
+    {q:"What does the gruffalo look like?",a:"He has terrible tusks, claws and teeth",o:["He has terrible tusks, claws and teeth","He is small and pink","He has wings and a long neck"]},
+    {q:"What is at the end of the gruffalo's nose?",a:"A poisonous wart",o:["A poisonous wart","A gold ring","A red flower"]},
+    {q:"What colour are the prickles on his back?",a:"Purple",o:["Purple","Yellow","White"]},
+    {q:"Is the gruffalo real in this story?",a:"Yes! The mouse meets a real gruffalo",o:["Yes! The mouse meets a real gruffalo","No, he is only a dream","No, it is a picture in a book"]},
+    {q:"What does the gruffalo want to do with the mouse?",a:"Eat him",o:["Eat him","Play with him","Help him"]},
+    {q:"What is the mouse's clever plan?",a:"To show that all animals are afraid of him",o:["To show that all animals are afraid of him","To run home very fast","To call his friends"]},
+    {q:"What does the mouse say his favourite food is?",a:"Gruffalo crumble",o:["Gruffalo crumble","Roasted fox","Owl ice cream"]},
+    {q:"What does the mouse eat at the end?",a:"A nut",o:["A nut","A cake","An ice cream"]}
+  ]
+}
+};
+
+/* ================= ЛОГИКА ================= */
+let book = 'peter';
+let mode = 'dict';
+const MODES = [
+  ['dict','📖 Словарь'],
+  ['cards','🃏 Карточки'],
+  ['quiz','✅ Перевод'],
+  ['pairs','🔗 Пары'],
+  ['gaps','✍️ Пропуски'],
+  ['story','❓ По книге']
+];
+const stage = document.getElementById('stage');
+
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+let ttsAudio=null;
+function speak(t){
+  // Google Translate TTS; при любой проблеме — переключение на голос браузера
+  const url='https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q='+encodeURIComponent(t);
+  if(ttsAudio){ttsAudio.pause();ttsAudio.src='';}
+  try{speechSynthesis.cancel();}catch(e){}
+  let fallbackDone=false;
+  const fb=()=>{if(!fallbackDone){fallbackDone=true;speakFallback(t);}};
+  ttsAudio=new Audio(url);
+  const timer=setTimeout(()=>{if(ttsAudio.paused)fb();},2000);
+  ttsAudio.onplaying=()=>clearTimeout(timer);
+  ttsAudio.onerror=()=>{clearTimeout(timer);fb();};
+  ttsAudio.play().catch(()=>{clearTimeout(timer);fb();});
+}
+function speakFallback(t){
+  // запасной вариант, если Google TTS недоступен
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(t);
+    u.lang='en-US'; u.rate=0.85;
+    speechSynthesis.speak(u);
+  }catch(e){alert('Озвучка недоступна: '+e.message);}
+}
+function openBook(b){
+  book=b;
+  const d=BOOKS[b];
+  document.body.className=d.theme;
+  document.getElementById('bookTitle').textContent=d.title;
+  document.getElementById('bookSub').textContent=d.sub;
+  document.getElementById('footerLine').textContent=d.footer;
+  document.getElementById('homeScreen').style.display='none';
+  document.getElementById('trainerScreen').style.display='block';
+  window.scrollTo(0,0);
+  document.getElementById('bookVideo').src='https://www.youtube-nocookie.com/embed/'+d.video;
+  mode='dict';
+  renderModeTabs();
+  setMode(mode);
+}
+function goHome(){
+  if(ttsAudio)ttsAudio.pause();
+  document.getElementById('bookVideo').src='about:blank';
+  document.body.className='theme-peter';
+  document.getElementById('trainerScreen').style.display='none';
+  document.getElementById('homeScreen').style.display='block';
+  window.scrollTo(0,0);
+}
+function renderModeTabs(){
+  const el=document.getElementById('modeTabs');
+  el.innerHTML='';
+  MODES.forEach(([id,label])=>{
+    const btn=document.createElement('button');
+    btn.className='mode-tab'+(id===mode?' active':'');
+    btn.textContent=label;
+    btn.onclick=()=>setMode(id);
+    el.appendChild(btn);
+  });
+}
+function setMode(m){
+  mode=m; renderModeTabs();
+  ({dict:renderDict,cards:renderCards,quiz:renderQuiz,pairs:renderPairs,gaps:renderGaps,story:renderStory})[m]();
+}
+
+/* ---- 1. Словарь ---- */
+function renderDict(){
+  const words=BOOKS[book].words;
+  stage.innerHTML=`
+    <div class="hint">Читаешь книгу — встретил незнакомое слово — найди его здесь. Нажми 🔊, чтобы услышать произношение.</div>
+    <input class="search" id="dictSearch" placeholder="Найти слово… (например: garden)" autocomplete="off">
+    <div id="dictList"></div>`;
+  const list=document.getElementById('dictList');
+  const draw=(filter)=>{
+    const f=filter.trim().toLowerCase();
+    const rows=words.filter(([en,ru])=>!f||en.toLowerCase().includes(f)||ru.toLowerCase().includes(f));
+    list.innerHTML = rows.length
+      ? rows.map(([en,ru])=>`
+        <div class="dict-row">
+          <button class="spk" onclick="speak('${en.replace(/'/g,"\\'")}')" aria-label="озвучить">🔊</button>
+          <span class="dict-en">${en}</span>
+          <span class="dict-ru">${ru}</span>
+        </div>`).join('')
+      : `<div class="dict-empty">Слово «${filter}» не найдено в словаре книги</div>`;
+  };
+  draw('');
+  document.getElementById('dictSearch').oninput=e=>draw(e.target.value);
+}
+
+/* ---- 2. Карточки ---- */
+let deck=[], deckPos=0, repeatPile=[];
+function renderCards(){
+  deck=shuffle(BOOKS[book].words); deckPos=0; repeatPile=[];
+  drawCard();
+}
+function drawCard(){
+  if(deckPos>=deck.length){
+    if(repeatPile.length){
+      deck=shuffle(repeatPile); repeatPile=[]; deckPos=0;
+    }else{
+      stage.innerHTML=`<div class="result-box">
+        <div class="big">🎉</div>
+        <p>Все карточки выучены! Отличная работа.</p>
+        <button class="btn green" onclick="renderCards()">Начать заново</button>
+      </div>`;
+      return;
+    }
+  }
+  const [en,ru]=deck[deckPos];
+  stage.innerHTML=`
+    <div class="progress-line">Карточка ${deckPos+1} из ${deck.length}${repeatPile.length?` · на повтор: ${repeatPile.length}`:''}</div>
+    <div class="card-stage">
+      <div class="card" id="theCard" onclick="this.classList.toggle('flipped')">
+        <div class="card-face">
+          <div class="card-word">${en}</div>
+          <button class="spk" onclick="event.stopPropagation();speak('${en.replace(/'/g,"\\'")}')">🔊</button>
+          <div class="card-tip">нажми, чтобы увидеть перевод</div>
+        </div>
+        <div class="card-face back">
+          <div class="card-tr">${ru}</div>
+          <div class="card-tip">${en}</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-btns">
+      <button class="btn red" onclick="cardAnswer(false)">🤔 Ещё повторю</button>
+      <button class="btn green" onclick="cardAnswer(true)">😎 Знаю!</button>
+    </div>`;
+}
+function cardAnswer(known){
+  if(!known) repeatPile.push(deck[deckPos]);
+  deckPos++; drawCard();
+}
+
+/* ---- общий движок для викторин ---- */
+let qList=[], qPos=0, qScore=0, qRenderer=null;
+function startQuiz(list, renderer){
+  qList=list; qPos=0; qScore=0; qRenderer=renderer;
+  qRenderer();
+}
+function quizHeader(){
+  return `<div class="score-bar"><span>Вопрос ${qPos+1} из ${qList.length}</span><span>⭐ ${qScore}</span></div>`;
+}
+function quizResult(restart){
+  const pct=Math.round(qScore/qList.length*100);
+  const msg = pct===100?'Идеально! 🏆':pct>=70?'Отлично, так держать!':pct>=40?'Неплохо! Перечитай книгу и попробуй ещё раз.':'Стоит перечитать книгу и словарь — и попробовать снова!';
+  stage.innerHTML=`<div class="result-box">
+    <div class="big">${qScore} / ${qList.length}</div>
+    <p>${msg}</p>
+    <button class="btn green" onclick="${restart}()">Ещё раз</button>
+  </div>`;
+}
+function answerClick(btn, isCorrect, correctText, next){
+  const opts=stage.querySelectorAll('.opt');
+  opts.forEach(o=>{o.disabled=true; if(o.dataset.val===correctText)o.classList.add('correct');});
+  const fb=document.getElementById('fb');
+  if(isCorrect){qScore++; fb.textContent='Верно! ✔'; fb.className='feedback ok';}
+  else{btn.classList.add('wrong'); fb.textContent='Правильный ответ подсвечен зелёным'; fb.className='feedback no';}
+  setTimeout(()=>{qPos++; qPos<qList.length?qRenderer():quizResult(next);},1200);
+}
+
+/* ---- 3. Перевод (EN → RU) ---- */
+function renderQuiz(){
+  const words=BOOKS[book].words;
+  const qs=shuffle(words).slice(0,10).map(([en,ru])=>{
+    const wrong=shuffle(words.filter(w=>w[1]!==ru)).slice(0,3).map(w=>w[1]);
+    return {q:en,a:ru,o:shuffle([ru,...wrong])};
+  });
+  startQuiz(qs, drawTransQ);
+}
+function drawTransQ(){
+  const q=qList[qPos];
+  stage.innerHTML=`${quizHeader()}
+    <div class="q-word">${q.q} <button class="spk" onclick="speak('${q.q.replace(/'/g,"\\'")}')">🔊</button></div>
+    <div class="hint" style="text-align:center">Выбери правильный перевод</div>
+    <div class="opts">${q.o.map(o=>`<button class="opt" data-val="${o}">${o}</button>`).join('')}</div>
+    <div class="feedback" id="fb"></div>`;
+  stage.querySelectorAll('.opt').forEach(b=>b.onclick=()=>answerClick(b,b.dataset.val===q.a,q.a,'renderQuiz'));
+}
+
+/* ---- 4. Пары ---- */
+let pairSel=null, pairsLeft=0, pairRound=[];
+function renderPairs(){
+  pairRound=shuffle(BOOKS[book].words).slice(0,6);
+  pairsLeft=6; pairSel=null;
+  const items=shuffle([
+    ...pairRound.map(([en,ru])=>({t:en,key:en,side:'en'})),
+    ...pairRound.map(([en,ru])=>({t:ru,key:en,side:'ru'}))
+  ]);
+  stage.innerHTML=`
+    <div class="hint">Соедини английское слово с переводом: нажми на слово, потом на его пару.</div>
+    <div class="pairs-grid">${items.map((it,i)=>
+      `<button class="pair-btn" data-key="${it.key}" data-side="${it.side}" id="pb${i}">${it.t}</button>`).join('')}
+    </div>
+    <div class="feedback" id="fb"></div>`;
+  stage.querySelectorAll('.pair-btn').forEach(b=>b.onclick=()=>pairClick(b));
+}
+function pairClick(b){
+  if(b.classList.contains('done'))return;
+  if(!pairSel){pairSel=b; b.classList.add('sel'); return;}
+  if(pairSel===b){b.classList.remove('sel'); pairSel=null; return;}
+  if(pairSel.dataset.key===b.dataset.key && pairSel.dataset.side!==b.dataset.side){
+    pairSel.classList.remove('sel');
+    pairSel.classList.add('done'); b.classList.add('done');
+    pairSel=null; pairsLeft--;
+    if(pairsLeft===0){
+      const fb=document.getElementById('fb');
+      fb.innerHTML='Все пары собраны! 🎉';
+      fb.className='feedback ok';
+      setTimeout(renderPairs,1400);
+    }
+  }else{
+    b.classList.add('shake'); pairSel.classList.add('shake');
+    const a=pairSel;
+    setTimeout(()=>{a.classList.remove('shake','sel'); b.classList.remove('shake');},380);
+    pairSel=null;
+  }
+}
+
+/* ---- 5. Пропуски ---- */
+function renderGaps(){
+  startQuiz(shuffle(BOOKS[book].gaps).slice(0,10), drawGapQ);
+}
+function drawGapQ(){
+  const q=qList[qPos];
+  stage.innerHTML=`${quizHeader()}
+    <div class="hint" style="text-align:center">Какое слово пропущено в предложении?</div>
+    <div class="q-text">${q.s.replace('___','<span class="gap">?</span>')}</div>
+    <div class="opts">${shuffle(q.o).map(o=>`<button class="opt" data-val="${o}">${o}</button>`).join('')}</div>
+    <div class="feedback" id="fb"></div>`;
+  stage.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+    if(b.dataset.val===q.a) document.querySelector('.gap').textContent=q.a;
+    answerClick(b,b.dataset.val===q.a,q.a,'renderGaps');
+  });
+}
+
+/* ---- 6. Вопросы по книге ---- */
+function renderStory(){
+  startQuiz(shuffle(BOOKS[book].quizQs).slice(0,10), drawStoryQ);
+}
+function drawStoryQ(){
+  const q=qList[qPos];
+  stage.innerHTML=`${quizHeader()}
+    <div class="q-text"><b>${q.q}</b></div>
+    <div class="opts">${shuffle(q.o).map(o=>`<button class="opt" data-val="${o}">${o}</button>`).join('')}</div>
+    <div class="feedback" id="fb"></div>`;
+  stage.querySelectorAll('.opt').forEach(b=>b.onclick=()=>answerClick(b,b.dataset.val===q.a,q.a,'renderStory'));
+}
+
+/* старт: экран выбора книги */
+</script>
+</body>
+</html>
